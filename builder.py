@@ -14,7 +14,15 @@ for root, dirs, files in os.walk('meknes'):
             for result in j_data["results"]:
                 js_resp = requests.get("https://maps.googleapis.com/maps/api/place/details/json?placeid="+result["place_id"]+"&key="+MyKey)
                 if js_resp.status_code == 200:
-                    if not os.path.exists("places_folder/"+result["place_id"]):
-                        os.makedirs("places_folder/"+result["place_id"])
-                        open("places_folder/"+result["place_id"]+"/result.json", "w").write(json.dumps(json.loads(js_resp.text)))
+                    if not os.path.exists("places_folder/"+type_name+"/"+result["place_id"]):
+                        os.makedirs("places_folder/"+type_name+"/"+result["place_id"])
+                        open("places_folder/"+type_name+"/"+result["place_id"]+"/result.json", "w").write(json.dumps(json.loads(js_resp.text)))
+                        if "photos" in result:
+                            for photo in result["photos"]:
+                                photo_url = "https://maps.googleapis.com/maps/api/place/photo?maxwidth="+str(photo["width"])+"&photoreference="+photo["photo_reference"]+"&key=" + MyKey
+                                photo_data = requests.get(photo_url, stream=True)
+                                if photo_data.status_code == 200:
+                                    with open("places_folder/"+type_name+"/"+result["place_id"]+"/"+str(random.randint(0,999999))+".png", "wb") as f:
+                                        for chunk in photo_data.iter_content(1024):
+                                            f.write(chunk)
                 print result["place_id"]
